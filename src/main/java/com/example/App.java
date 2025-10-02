@@ -11,8 +11,8 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         Label lbl = new Label("Hello JavaFX!");
-        stage.setScene(new Scene(new StackPane(lbl), 400, 250));
-        stage.setTitle("My JavaFX App");
+        stage.setScene(new Scene(new StackPane(lbl), 1000, 500));
+        stage.setTitle("Bachelor Program: Activity Selector");
         stage.show();
     }
 
