@@ -27,21 +27,3 @@ CREATE TABLE selections (
     course_subject1 TEXT,
     course_subject2 TEXT
 );
-
-INSERT INTO programs (name) VALUES 
-('Software Development'), 
-('Web Development'), 
-('IT Security');
-
-INSERT INTO subject_modules (program_id, name) VALUES
-(1, '1st Semester'),
-(1, '2nd Semester'),
-(2, 'Frontend Basics'),
-(3, 'Network Security');
-
-INSERT INTO courses (module_id, name) VALUES
-(1, 'Java Basics'),
-(1, 'Databases'),
-(2, 'Algorithms'),
-(3, 'HTML & CSS'),
-(4, 'Cryptography');
