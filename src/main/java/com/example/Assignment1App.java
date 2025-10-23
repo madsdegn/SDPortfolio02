@@ -1,3 +1,6 @@
+// Assignment 1 - Bachelor Program Activity Selector
+// Mads Degn, Daniel Holst Pedersen
+// 28/10/25
 package com.example;
 
 import java.util.HashMap;
@@ -19,27 +22,36 @@ import javafx.stage.Stage;
 public class Assignment1App extends Application {
 
     // UI controls
-    private ComboBox<String> basicComboBox;
-    private ComboBox<String> subjectComboBox1;
-    private ComboBox<String> subjectComboBox2;
-    private ComboBox<String> basicCourseComboBox;
-    private ComboBox<String> subjectCourseComboBox1;
-    private ComboBox<String> subjectCourseComboBox2;
+    // ComboBoxes used for dropdown selections
+    private ComboBox<String> basicComboBox;          // Select basic program
+    private ComboBox<String> subjectComboBox1;       // Select subject module 1
+    private ComboBox<String> subjectComboBox2;       // Select subject module 2
+    private ComboBox<String> basicCourseComboBox;    // Select courses for basic program
+    private ComboBox<String> subjectCourseComboBox1; // Select courses for subject module 1
+    private ComboBox<String> subjectCourseComboBox2; // Select courses for subject module 2
+
+    // Text input for student name
     private TextField nameField;
+
+    // TextArea to display all added activities for the current student
     private TextArea selectedArea;
 
-    // Store selections by student name
+    // Data model
+    // Store all student selections in memory.
+    // Key = student name
+    // Value = Assignment1StudentSelection object
     private Map<String, Assignment1StudentSelection> selections = new HashMap<>();
 
     @Override
     public void start(Stage stage) {
-        // Name input
+
+        // Name input section
         Label nameLabel = new Label("Enter Your Name");
         nameField = new TextField();
-        nameField.setPromptText("Your Name");
+        nameField.setPromptText("Your Name"); // Placeholder text
         nameField.setPrefWidth(200);
 
-        // Labels
+        // Labels for dropdowns
         Label basicLabel = new Label("Select Basic Program");
         Label subjectLabel1 = new Label("Select Subject Module 1");
         Label subjectLabel2 = new Label("Select Subject Module 2");
@@ -47,7 +59,7 @@ public class Assignment1App extends Application {
         Label subjectCourseLabel1 = new Label("Select Subject Module Courses 1");
         Label subjectCourseLabel2 = new Label("Select Subject Module Courses 2");
 
-        // ComboBoxes
+        // Initialize ComboBoxes
         basicComboBox = new ComboBox<>();
         subjectComboBox1 = new ComboBox<>();
         subjectComboBox2 = new ComboBox<>();
@@ -55,30 +67,36 @@ public class Assignment1App extends Application {
         subjectCourseComboBox1 = new ComboBox<>();
         subjectCourseComboBox2 = new ComboBox<>();
 
+        // Set a consistent width for all ComboBoxes
         for (ComboBox<String> cb : new ComboBox[]{basicComboBox, subjectComboBox1, subjectComboBox2,
             basicCourseComboBox, subjectCourseComboBox1, subjectCourseComboBox2}) {
             cb.setPrefWidth(200);
         }
 
-        // TextArea
+        // TextArea for displaying results
         selectedArea = new TextArea();
-        selectedArea.setEditable(false);
+        selectedArea.setEditable(false); // user cannot type here
         selectedArea.setPromptText("Selected activities...");
-        selectedArea.setPrefWidth(300);
+        selectedArea.setPrefWidth(200);
         selectedArea.setPrefHeight(250);
-        selectedArea.setWrapText(true);
+        selectedArea.setWrapText(true); // wrap long lines
 
         // Add Activity buttons
+        // Each button is tied to a specific course ComboBox
         Button addBasicActivityButton = new Button("Add Activity");
         addBasicActivityButton.setOnAction(e -> addActivity(basicCourseComboBox));
+        addBasicActivityButton.setPrefWidth(200); // Set width to 200 to match combo boxes
 
         Button addSubject1ActivityButton = new Button("Add Activity");
         addSubject1ActivityButton.setOnAction(e -> addActivity(subjectCourseComboBox1));
+        addSubject1ActivityButton.setPrefWidth(200); // Set width to 200 to match combo boxes
 
         Button addSubject2ActivityButton = new Button("Add Activity");
         addSubject2ActivityButton.setOnAction(e -> addActivity(subjectCourseComboBox2));
+        addSubject2ActivityButton.setPrefWidth(200); // Set width to 200 to match combo boxes
 
-        // Layout
+        // Layout containers
+        // Top row is name, program and subject module selectors
         HBox topContainer = new HBox(20,
                 new VBox(5, nameLabel, nameField),
                 new VBox(5, basicLabel, basicComboBox),
@@ -86,31 +104,36 @@ public class Assignment1App extends Application {
                 new VBox(5, subjectLabel2, subjectComboBox2)
         );
 
+        // Bottom row is course selectors, add buttons and textarea
         VBox basicCourseBox = new VBox(5, basicCourseLabel, basicCourseComboBox, addBasicActivityButton);
         VBox subjectCourseBox1 = new VBox(5, subjectCourseLabel1, subjectCourseComboBox1, addSubject1ActivityButton);
         VBox subjectCourseBox2 = new VBox(5, subjectCourseLabel2, subjectCourseComboBox2, addSubject2ActivityButton);
-
         VBox textAreaBox = new VBox(10, selectedArea);
 
         HBox bottomContainer = new HBox(20, basicCourseBox, subjectCourseBox1, subjectCourseBox2, textAreaBox);
 
+        // Main layout
+        // Vertical stacking of top and bottom sections
         VBox layout = new VBox(15, topContainer, new Separator(), bottomContainer);
         layout.setPadding(new Insets(20));
 
-        Scene scene = new Scene(layout, 1000, 400);
+        // Scene and Stage setup
+        Scene scene = new Scene(layout, 900, 400);
         stage.setScene(scene);
         stage.setTitle("Bachelor Program: Activity Selector");
         stage.show();
 
-        // Load initial data
-        loadPrograms();
+        // Initialize data
+        loadPrograms(); // load basic programs into the first ComboBox
 
-        // Hook up events
+        // Event handlers
+        // When a basic program is chosen, load subject modules and basic courses
         basicComboBox.setOnAction(e -> {
             loadSubjectModules();
             loadBasicCourses(basicCourseComboBox);
         });
 
+        // When subject module 1 is chosen, load its courses
         subjectComboBox1.setOnAction(e -> {
             String selected = subjectComboBox1.getValue();
             if (selected != null) {
@@ -118,6 +141,7 @@ public class Assignment1App extends Application {
             }
         });
 
+        // When subject module 2 is chosen, load its courses
         subjectComboBox2.setOnAction(e -> {
             String selected = subjectComboBox2.getValue();
             if (selected != null) {
@@ -126,16 +150,19 @@ public class Assignment1App extends Application {
         });
     }
 
-    // --- Loaders (hardcoded for now) ---
+    // Data loading methods
+    // Load basic programs
     private void loadPrograms() {
         basicComboBox.getItems().setAll("HumTek", "NatBach");
     }
 
+    // Load subject modules
     private void loadSubjectModules() {
         subjectComboBox1.getItems().setAll("Computer Science", "Informatics");
         subjectComboBox2.getItems().setAll("Computer Science", "Informatics");
     }
 
+    // Load courses depending on which subject module was chosen
     private void loadSubjectCourses(String subject, ComboBox<String> comboBox) {
         comboBox.getItems().clear();
 
@@ -156,6 +183,7 @@ public class Assignment1App extends Application {
         }
     }
 
+    // Load basic courses
     private void loadBasicCourses(ComboBox<String> comboBox) {
         comboBox.getItems().setAll(
                 "Basic Project 1",
@@ -168,7 +196,8 @@ public class Assignment1App extends Application {
         );
     }
 
-    // --- Add activity ---
+    // Add activity method
+    // Called when the user clicks one of the "Add Activity" buttons
     private void addActivity(ComboBox<String> comboBox) {
         String studentName = nameField.getText();
         String program = basicComboBox.getValue();
@@ -176,19 +205,21 @@ public class Assignment1App extends Application {
         String subject2 = subjectComboBox2.getValue();
         String activity = comboBox.getValue();
 
+        // Input must have a name and an activity selected
         if (studentName == null || studentName.isBlank() || activity == null) {
-            selectedArea.appendText("⚠ Please enter your name and select an activity first.\n");
+            selectedArea.appendText("Please enter your name and select an activity first.\n");
             return;
         }
 
-        // Get or create the student's selection model
+        // Retrieve or create the student selection model
         Assignment1StudentSelection selection = selections.get(studentName);
         if (selection == null) {
+            // Create a new model object for this student
             selection = new Assignment1StudentSelection(studentName, program, subject1, subject2);
             selections.put(studentName, selection);
         }
 
-        // Add the activity to the model
+        // Add the chosen activity to the student list
         selection.addActivity(activity);
 
         // Refresh the text area to show all activities for this student
@@ -196,6 +227,6 @@ public class Assignment1App extends Application {
     }
 
     public static void main(String[] args) {
-        launch();
+        launch(); // Launches the JavaFX application
     }
 }
