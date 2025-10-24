@@ -214,6 +214,7 @@ public class Assignment1App extends Application {
         // Retrieve or create the student selection model
         Assignment1StudentSelection selection = selections.get(studentName);
         if (selection == null) {
+
             // Create a new model object for this student
             selection = new Assignment1StudentSelection(studentName, program, subject1, subject2);
             selections.put(studentName, selection);
