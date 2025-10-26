@@ -1,10 +1,13 @@
-// Assignment 1 - Bachelor Program Activity Selector
+// Assignment 5 - Bachelor Program Activity Selector
 // Mads Degn, Daniel Holst Pedersen
-// 28/10/25
+// 28/10-25
 package com.example;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -19,7 +22,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class Assignment1App extends Application {
+public class Assignment5App extends Application {
+
+    // Database file
+    private static final String DB_URL = "jdbc:sqlite:database.db";
 
     // UI controls
     // ComboBoxes used for dropdown selections
@@ -36,11 +42,10 @@ public class Assignment1App extends Application {
     // TextArea to display all added activities for the current student
     private TextArea selectedArea;
 
-    // Data model
-    // Store all student selections in memory.
-    // Key = student name
-    // Value = Assignment1StudentSelection object
-    private Map<String, Assignment1StudentSelection> selections = new HashMap<>();
+    // Database connection helper
+    private Connection connect() throws SQLException {
+        return DriverManager.getConnection(DB_URL);
+    }
 
     @Override
     public void start(Stage stage) {
@@ -129,15 +134,18 @@ public class Assignment1App extends Application {
         // Event handlers
         // When a basic program is chosen, load subject modules and basic courses
         basicComboBox.setOnAction(e -> {
-            loadSubjectModules();
-            loadBasicCourses(basicCourseComboBox);
+            String program = basicComboBox.getValue();
+            if (program != null) {
+                loadSubjectModules(program);
+                loadBasicCourses(program, basicCourseComboBox);
+            }
         });
 
         // When subject module 1 is chosen, load its courses
         subjectComboBox1.setOnAction(e -> {
             String selected = subjectComboBox1.getValue();
             if (selected != null) {
-                loadSubjectCourses(selected, subjectCourseComboBox1);
+                loadCoursesForModule(selected, subjectCourseComboBox1);
             }
         });
 
@@ -145,59 +153,84 @@ public class Assignment1App extends Application {
         subjectComboBox2.setOnAction(e -> {
             String selected = subjectComboBox2.getValue();
             if (selected != null) {
-                loadSubjectCourses(selected, subjectCourseComboBox2);
+                loadCoursesForModule(selected, subjectCourseComboBox2);
             }
         });
     }
 
-    // Data loading methods
-    // Load basic programs
+    // Loaders from DB
+    // Load all basic programs from the database into the basicComboBox
     private void loadPrograms() {
-        basicComboBox.getItems().setAll("HumTek", "NatBach");
-    }
-
-    // Load subject modules
-    private void loadSubjectModules() {
-        subjectComboBox1.getItems().setAll("Computer Science", "Informatics");
-        subjectComboBox2.getItems().setAll("Computer Science", "Informatics");
-    }
-
-    // Load courses depending on which subject module was chosen
-    private void loadSubjectCourses(String subject, ComboBox<String> comboBox) {
-        comboBox.getItems().clear();
-
-        if ("Computer Science".equals(subject)) {
-            comboBox.getItems().setAll(
-                    "Subject Module Project, Computer Science",
-                    "Essential Computing",
-                    "Software Development",
-                    "Interactive Digital Systems"
-            );
-        } else if ("Informatics".equals(subject)) {
-            comboBox.getItems().setAll(
-                    "Subject Module Project, Informatics",
-                    "OFIT",
-                    "BANDIT",
-                    "WITS"
-            );
+        basicComboBox.getItems().clear();
+        String sql = "SELECT name FROM basic_programs";
+        try (Connection conn = connect(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                basicComboBox.getItems().add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    // Load basic courses
-    private void loadBasicCourses(ComboBox<String> comboBox) {
-        comboBox.getItems().setAll(
-                "Basic Project 1",
-                "Basic Project 2",
-                "Basic Project 3",
-                "DK",
-                "STS",
-                "TSA",
-                "Science Theory"
-        );
+    // Load subject modules for a given program into both subject module ComboBoxes
+    private void loadSubjectModules(String programName) {
+        subjectComboBox1.getItems().clear();
+        subjectComboBox2.getItems().clear();
+        String sql = "SELECT sm.name FROM subject_modules sm "
+                + "JOIN basic_programs bp ON sm.basic_program_id = bp.id "
+                + "WHERE bp.name = ?";
+        try (Connection conn = connect(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, programName);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String module = rs.getString("name");
+                subjectComboBox1.getItems().add(module);
+                subjectComboBox2.getItems().add(module);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    // Add activity method
+    // Load all courses for a given subject module into the provided ComboBox
+    private void loadCoursesForModule(String moduleName, ComboBox<String> comboBox) {
+        comboBox.getItems().clear();
+        String sql = "SELECT c.name FROM courses c "
+                + "JOIN subject_modules sm ON c.subject_module_id = sm.id "
+                + "WHERE sm.name = ?";
+        try (Connection conn = connect(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, moduleName);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                comboBox.getItems().add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Load all basic courses for a given program into the provided ComboBox
+    private void loadBasicCourses(String programName, ComboBox<String> comboBox) {
+        comboBox.getItems().clear();
+        String sql = "SELECT c.name FROM courses c "
+                + "JOIN basic_programs bp ON c.basic_program_id = bp.id "
+                + "WHERE bp.name = ? AND c.is_basic = 1";
+        try (Connection conn = connect(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, programName);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                comboBox.getItems().add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Add activity and save to database
     // Called when the user clicks one of the "Add Activity" buttons
+    // Ensures the student exists in the students table (INSERT OR IGNORE)
+    // Inserts the chosen activity into the selections table
+    // Refreshes the TextArea to show all activities for that student
     private void addActivity(ComboBox<String> comboBox) {
         String studentName = nameField.getText();
         String program = basicComboBox.getValue();
@@ -205,26 +238,63 @@ public class Assignment1App extends Application {
         String subject2 = subjectComboBox2.getValue();
         String activity = comboBox.getValue();
 
-        // Input must have a name and an activity selected
+        // Validate input: must have a student name and an activity selected
         if (studentName == null || studentName.isBlank() || activity == null) {
             selectedArea.appendText("Please enter your name and select an activity first.\n");
             return;
         }
 
-        // Retrieve or create the student selection model
-        Assignment1StudentSelection selection = selections.get(studentName);
-        if (selection == null) {
+        try (Connection conn = connect()) {
 
-            // Create a new model object for this student
-            selection = new Assignment1StudentSelection(studentName, program, subject1, subject2);
-            selections.put(studentName, selection);
+            // Insert student if not already in the database
+            String insertStudent = "INSERT OR IGNORE INTO students(name, basic_program_id, subject1_id, subject2_id) "
+                    + "VALUES (?, (SELECT id FROM basic_programs WHERE name=?), "
+                    + "(SELECT id FROM subject_modules WHERE name=?), "
+                    + "(SELECT id FROM subject_modules WHERE name=?))";
+            try (PreparedStatement ps = conn.prepareStatement(insertStudent)) {
+                ps.setString(1, studentName);
+                ps.setString(2, program);
+                ps.setString(3, subject1);
+                ps.setString(4, subject2);
+                ps.executeUpdate();
+            }
+
+            // Insert the selected activity for this student
+            String insertSelection = "INSERT INTO selections(student_id, course_id) "
+                    + "VALUES ((SELECT id FROM students WHERE name=?), "
+                    + "(SELECT id FROM courses WHERE name=?))";
+            try (PreparedStatement ps = conn.prepareStatement(insertSelection)) {
+                ps.setString(1, studentName);
+                ps.setString(2, activity);
+                ps.executeUpdate();
+            }
+
+            // Update the TextArea with all activities for this student
+            selectedArea.setText(getStudentActivities(studentName));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+    }
 
-        // Add the chosen activity to the student list
-        selection.addActivity(activity);
-
-        // Refresh the text area to show all activities for this student
-        selectedArea.setText(selection.toString());
+    // Helper method: fetch all activities for a given student from the database
+    // Returns a string with one line per activity
+    private String getStudentActivities(String studentName) {
+        StringBuilder sb = new StringBuilder();
+        String sql = "SELECT c.name FROM selections sel "
+                + "JOIN students s ON sel.student_id = s.id "
+                + "JOIN courses c ON sel.course_id = c.id "
+                + "WHERE s.name = ?";
+        try (Connection conn = connect(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, studentName);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                sb.append(studentName).append(" - ").append(rs.getString("name")).append("\n");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
     }
 
     public static void main(String[] args) {
