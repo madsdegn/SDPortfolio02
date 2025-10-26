@@ -1,3 +1,8 @@
+-- Part 4
+
+-- Mads Degn, Daniel Holst Pedersen
+-- 28/10-25
+
 -- Query showing students with fewer than four activities from a basic program
 SELECT s.name
 FROM students s
