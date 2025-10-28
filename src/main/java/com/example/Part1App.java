@@ -1,4 +1,4 @@
-// Assignment 1 - Bachelor Program Activity Selector
+// Part 1 - Bachelor Program Activity Selector
 // Mads Degn, Daniel Holst Pedersen
 // 28/10/25
 package com.example;

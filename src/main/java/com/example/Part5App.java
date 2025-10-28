@@ -1,4 +1,4 @@
-// Assignment 5 - Bachelor Program Activity Selector
+// Part 5 - Bachelor Program Activity Selector
 // Mads Degn, Daniel Holst Pedersen
 // 28/10-25
 package com.example;
@@ -22,7 +22,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class Assignment5App extends Application {
+public class Part5App extends Application {
 
     // Database file
     private static final String DB_URL = "jdbc:sqlite:database.db";

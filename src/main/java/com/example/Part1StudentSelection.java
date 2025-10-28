@@ -1,4 +1,4 @@
-// Assignment 1 - Student Selection Model
+// Part 1 - Student Selection Model
 // Mads Degn, Daniel Holst Pedersen
 // 28/10/25
 package com.example;
@@ -6,7 +6,7 @@ package com.example;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Assignment1StudentSelection {
+public class Part1StudentSelection {
 
     // Fields
     private String studentName;   // The name of the student
@@ -20,7 +20,7 @@ public class Assignment1StudentSelection {
     // Constructor for creating a new student selection
     // Initializes the student name, program, and subject modules
     // Also creates an empty list to hold activities
-    public Assignment1StudentSelection(String studentName, String program, String subject1, String subject2) {
+    public Part1StudentSelection(String studentName, String program, String subject1, String subject2) {
         this.studentName = studentName;
         this.program = program;
         this.subject1 = subject1;
